@@ -47,8 +47,24 @@ class _Categories extends State<Categories> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Database Example'),
-      ),
+  title: const Text('Database Example'),
+  actions: [
+    IconButton(
+      icon: const Icon(Icons.delete),
+      onPressed: () async {
+  Database db = await DatabaseHelper.instance.database;
+  await DatabaseHelper.instance.dropAndRecreateUserTable(db); 
+  setState(() {
+    // รีเฟรชหน้าจอหลังจากลบตาราง
+  });
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(content: Text('Table d_user has been reset')),
+  );
+},
+
+    ),
+  ],
+),
       body: Column(
         children: [
           SizedBox(
@@ -81,43 +97,34 @@ class _Categories extends State<Categories> {
               ),
             ),
           ),
-          Expanded(
+           Expanded(
             child: SingleChildScrollView(
               child: Column(
                 children: [
                   StreamBuilder(
-                    stream: (pang_id < 4)
-                        ? DatabaseHelper.instance
-                            .getDataStream('${pang_s[pang_id]}')
-                        : DatabaseHelper.instance.getDataStream_JOIN(
-                            'medication_schedule', 'd_medications'),
+                    stream: DatabaseHelper.instance
+                        .getDataStream('${pang_s[pang_id]}'),
                     builder: (context, snapshot) {
                       if (snapshot.hasData) {
                         return DataTable(
                           columns: [
                             DataColumn(label: Text('ID')),
-                            DataColumn(label: Text('Names')),
-                            DataColumn(label: Text('Status')),
-                            DataColumn(label: Text('X')),
+                            DataColumn(label: Text('Name TH')),
+                            DataColumn(label: Text('Action')),
                           ],
-                          rows: snapshot.data!.map((item) {
+                          rows: snapshot.data!.map<DataRow>((item) {
                             return DataRow(
                               cells: [
-                                DataCell(Text(item['id'].toString() ??
-                                    item['name_th'] ??
-                                    item['unit_th'])),
-                                DataCell(Text(item['name_th'] ??
-                                    item['unit_th'])), // Handle null case
-                                DataCell(Text(item['status'] ?? '-')),
-                                DataCell(InkWell(
-                                    onTap: () {
-                                      DatabaseHelper.instance.deleteData(
-                                          item['id'],
-                                          (pang_id < 4)
-                                              ? '${pang_s[pang_id]}'
-                                              : 'medication_schedule');
+                                DataCell(Text(item['id']?.toString() ?? '-')),
+                                DataCell(Text(item['name_th'] ?? '-')),
+                                DataCell(
+                                  IconButton(
+                                    icon: Icon(Icons.edit),
+                                    onPressed: () {
+                                      _showUserDetail(context, item);
                                     },
-                                    child: Text('ลบ'))),
+                                  ),
+                                ),
                               ],
                             );
                           }).toList(),
@@ -147,3 +154,37 @@ class _Categories extends State<Categories> {
     );
   }
 }
+void _showUserDetail(BuildContext context, Map<String, dynamic> userData) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: userData.entries.map<Widget>((entry) {
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8.0),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${entry.key}: ',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        Expanded(
+                          child: Text(entry.value?.toString() ?? '-'),
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }

@@ -8,48 +8,47 @@ import 'package:quickalert/quickalert.dart';
 
 class AuthService {
   /// ฟังก์ชันสำหรับ login
-  Future signIn({
+  Future<void> signIn({
   required BuildContext context,
   required String identifier,
   required String password,
 }) async {
-  String url = "http://10.0.2.2/pill_reminder_login/login.php";
-  final response = await http.post(Uri.parse(url), body: {
-    'identifier': identifier,
-    'password': password,
-  });
+  final dbHelper = DatabaseHelper.instance;
 
-  print("Response Status Code: ${response.statusCode}");
-  print("Response Body: ${response.body}");
+  try {
+    // ค้นหาผู้ใช้จากอีเมลหรือเบอร์โทร
+    final user = await dbHelper.getUserByEmailOrPhone(identifier);
 
-  if (response.statusCode == 200) {
-    var data = json.decode(response.body);
-
-    if (data['status'] == 'Error') {
+    if (user == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(data['message'] ?? "เข้าสู่ระบบไม่สำเร็จ")),
+        const SnackBar(content: Text("ไม่พบผู้ใช้ในระบบ")),
       );
-    } else if (data['status'] == 'Success') {
-      // แสดง QuickAlert
-      QuickAlert.show(
-        context: context,
-        type: QuickAlertType.success,
-        text: 'login Successful!',
-      );
-
-      // หน่วงเวลา 1 วินาทีก่อนเปลี่ยนหน้า
-      await Future.delayed(const Duration(milliseconds: 2000));
-
-      // ปิด QuickAlert ก่อนเปลี่ยนหน้า
-      Navigator.pop(context);
-
-      // เปลี่ยนหน้าไปยัง home
-      Navigator.pushNamed(context, 'home');
+      return;
     }
-  } else {
-    // กรณี Response Status Code ไม่ใช่ 200
+
+    // ตรวจสอบรหัสผ่าน
+    if (user['password'] != password) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("รหัสผ่านไม่ถูกต้อง")),
+      );
+      return;
+    }
+
+    // หากเข้าสู่ระบบสำเร็จ แสดง QuickAlert
+    await QuickAlert.show(
+      context: context,
+      type: QuickAlertType.success,
+      text: 'เข้าสู่ระบบสำเร็จ!',
+    );
+
+    // หน่วงเวลา 2 วินาทีก่อนเปลี่ยนหน้า
+    await Future.delayed(const Duration(milliseconds: 500));
+
+    // เปลี่ยนหน้าไปยังหน้า 'home'
+    Navigator.pushNamed(context, 'home');
+  } catch (e) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("Error: ${response.statusCode}")),
+      SnackBar(content: Text("เกิดข้อผิดพลาด: $e")),
     );
   }
 }
@@ -74,43 +73,55 @@ Future<void> signup({
   final dbHelper = DatabaseHelper.instance;
 
   try {
-    // ตรวจสอบว่ามีผู้ใช้อยู่ในระบบแล้วหรือไม่
-    final existingUser = await dbHelper.getUserByEmail(email);
-    if (existingUser != null) {
-      // แสดงข้อความแจ้งว่าอีเมลนี้มีอยู่แล้ว
+    // ตรวจสอบว่ามีผู้ใช้อยู่ในระบบแล้วหรือไม่ (อีเมลหรือเบอร์โทร)
+    final existingEmail = await dbHelper.getUserByEmailOrPhone(email);
+    final existingPhone = await dbHelper.getUserByEmailOrPhone(phone);
+
+    if (existingEmail != null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("อีเมลนี้มีผู้ใช้แล้ว")),
       );
       return;
     }
 
-    // สร้างข้อมูลผู้ใช้ใหม่
-  Map<String, dynamic> newUser = {
-  'name_th': nameTh,
-  'name_en': nameEn,
-  'sex_th': sexTh,
-  'sex_en': sexEn,
-  'weight': weight,
-  'height': height,
-  'img': img,
-  'birthday': birthday,
-  'age': age,
-  'phone': int.parse(phone),
-  'email': email,
-  'addr': addr,
-  'password': pass, // เพิ่มค่านี้สำหรับเก็บรหัสผ่าน
-};
+    if (existingPhone != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("เบอร์โทรนี้มีผู้ใช้แล้ว")),
+      );
+      return;
+    }
 
+    // สร้างข้อมูลผู้ใช้ใหม่
+    Map<String, dynamic> newUser = {
+      'name_th': nameTh,
+      'name_en': nameEn,
+      'sex_th': sexTh,
+      'sex_en': sexEn,
+      'weight': weight,
+      'height': height,
+      'img': img,
+      'birthday': birthday,
+      'age': age,
+      'phone': int.parse(phone),
+      'email': email,
+      'addr': addr,
+      'password': pass, // เพิ่มค่านี้สำหรับเก็บรหัสผ่าน
+    };
 
     // เพิ่มข้อมูลผู้ใช้ลงในตาราง d_user
     await dbHelper.insertData(newUser, 'd_user');
 
     // แสดงข้อความสำเร็จ
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("สมัครสมาชิกสำเร็จ")),
+    await QuickAlert.show(
+      context: context,
+      type: QuickAlertType.success,
+      title: 'สำเร็จ',
+      text: 'สมัครสมาชิกสำเร็จ!',
+      autoCloseDuration:
+          const Duration(seconds: 2), // ตั้งเวลาค้างไว้ 2 วินาที
     );
 
-    // นำทางไปยังหน้า Login
+    // หลังจาก QuickAlert ปิด ให้ไปยังหน้า Login
     Navigator.pushNamed(context, 'login');
   } catch (e) {
     // จัดการข้อผิดพลาด
@@ -119,4 +130,5 @@ Future<void> signup({
     );
   }
 }
+
 }

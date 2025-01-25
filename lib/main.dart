@@ -40,7 +40,7 @@ class MyApp extends StatelessWidget {
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
       ],
-      home: Register(),
+      home: login(),
       routes: {
         'register': (context) => Register(),
         'home': (context) => HomePage(),

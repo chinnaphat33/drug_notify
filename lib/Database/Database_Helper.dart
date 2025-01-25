@@ -21,13 +21,17 @@ class DatabaseHelper {
     return await openDatabase(path, version: 1, onCreate: _onCreate);
   }
 
-  Future _onCreate(Database db, int version) async {
-    await _createCategoriesTable(db);
-    await _createMedicationsTable(db);
-    await _createUnitTable(db);
-    await _createUserTable(db);
-    await _createMedicationScheduleTable(db);
-  }
+Future _onCreate(Database db, int version) async {
+  await _createCategoriesTable(db);
+  await _createMedicationsTable(db);
+  await _createUnitTable(db);
+  await _createUserTable(db); // สร้างตาราง d_user ก่อน
+  await _createMedicationScheduleTable(db);
+
+  // เพิ่มคอลัมน์ age หลังจากสร้างตาราง d_user
+  await db.execute('ALTER TABLE d_user ADD COLUMN age TEXT');
+}
+
 
   Future _createCategoriesTable(Database db) async {
     await db.execute('''
@@ -107,12 +111,39 @@ class DatabaseHelper {
         ''');
   }
 
-  Future<Map<String, dynamic>?> getUserByEmail(String email) async {
+  // Future<Map<String, dynamic>?> getUserByEmail(String email) async {
+  //   Database db = await instance.database;
+  //   List<Map<String, dynamic>> results = await db.query(
+  //     'd_user',
+  //     where: 'email = ?',
+  //     whereArgs: [email],
+  //   );
+
+  //   if (results.isNotEmpty) {
+  //     return results.first;
+  //   }
+  //   return null;
+  // }
+Future<Map<String, dynamic>?> getUserByEmailOrPhone(String identifier) async {
   Database db = await instance.database;
+
+  // ตรวจสอบว่า identifier เป็นอีเมลหรือเบอร์โทร
+  bool isPhone = RegExp(r'^[0-9]+$').hasMatch(identifier);
+  bool isEmail = RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(identifier);
+
+  if (!isPhone && !isEmail) {
+    // หาก identifier ไม่ใช่ทั้งอีเมลและเบอร์โทร ให้คืนค่า null
+    return null;
+  }
+
+  // เลือกเงื่อนไขการค้นหาตามชนิดของ identifier
+  String field = isPhone ? 'phone' : 'email';
+
+  // ค้นหาผู้ใช้จากฐานข้อมูล
   List<Map<String, dynamic>> results = await db.query(
     'd_user',
-    where: 'email = ?',
-    whereArgs: [email],
+    where: '$field = ?',
+    whereArgs: [identifier],
   );
 
   if (results.isNotEmpty) {
@@ -120,7 +151,6 @@ class DatabaseHelper {
   }
   return null;
 }
-
 
   Future<void> insertData(Map<String, dynamic> data, String table_Name) async {
     Database db = await instance.database;
@@ -179,6 +209,36 @@ class DatabaseHelper {
     String path = await getDatabasesPath();
     await deleteDatabase('$path/d_categories.db');
   }
-
- 
+  Future<void> dropAndRecreateUserTable(Database db) async {
+  // ลบตาราง d_user ถ้ามีอยู่
+  await db.execute('DROP TABLE IF EXISTS d_user');
+  
+  // สร้างตารางใหม่พร้อมคอลัมน์ใหม่
+  await db.execute('''
+    CREATE TABLE d_user (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name_th TEXT,
+      name_en TEXT,
+      sex_th TEXT,
+      sex_en TEXT,
+      weight REAL,
+      height REAL,
+      img TEXT,
+      birthday TEXT,
+      age TEXT,
+      phone INT,
+      other TEXT,
+      email TEXT,
+      password TEXT,
+      tel INT,
+      addr TEXT
+    )
+  ''');
+  print("Table 'd_user' has been recreated.");
+}
+Future _onUpgrade(Database db, int oldVersion, int newVersion) async {
+  if (oldVersion < newVersion) {
+    await dropAndRecreateUserTable(db);
+  }
+}
 }

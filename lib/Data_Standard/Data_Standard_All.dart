@@ -608,6 +608,7 @@ class DataStandardAll {
         "sex_en": "Male",
         "weight": 70,
         "height": 170,
+        "age": 40,
         "img": "img1.jpg",
         "birthday": "1990-01-01",
         "phone": "0812345678",

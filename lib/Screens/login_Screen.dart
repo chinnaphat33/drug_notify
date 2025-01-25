@@ -109,7 +109,7 @@ class _loginState extends State<login> {
                         color: Color.fromARGB(255, 26, 61, 99),
                       ),
                     ),
-                    validator: (val) => validatePassword(val ?? ''),
+                    // validator: (val) => validatePassword(val ?? ''),
                     controller: pass,
                   ),
                 ),

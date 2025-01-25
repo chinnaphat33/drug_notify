@@ -570,6 +570,7 @@ class _Register extends State<Register> {
                       controller: addrController,
                     ),
                   ),
+                  SizedBox(height: 10,),
                   SizedBox(
                     width: 350,
                     child: TextFormField(
