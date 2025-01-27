@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:pill_reminder/Screens/Add_drag_Screen.dart/Q_Screen/Q_Name.dart';
 import 'package:pill_reminder/Screens/Categories_Screen.dart';
 import 'package:pill_reminder/Screens/home_Screen.dart';
 import 'package:pill_reminder/Screens/login_Screen.dart';
 import 'package:pill_reminder/Screens/register_Screen.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:pill_reminder/Screens/Add_drag_Screen.dart/Q_drug_model/model.dart'; // Import Drug model
 import 'package:get/get.dart';
 import 'dart:io';
 
@@ -40,7 +42,7 @@ class MyApp extends StatelessWidget {
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
       ],
-      home: login(),
+      home: QuestionNameScreen(drug: Drug()),
       routes: {
         'register': (context) => Register(),
         'home': (context) => HomePage(),

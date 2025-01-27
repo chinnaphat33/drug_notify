@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:date_picker_timeline/date_picker_timeline.dart';
 import 'package:pill_reminder/Screens/add_drug.dart';
 import 'package:pill_reminder/Screens/widget/button.dart';
+import 'package:pill_reminder/Screens/Categories_Screen.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -16,6 +17,23 @@ class HomePage extends StatefulWidget {
 class _Homepage extends State<HomePage> {
   final DatePickerController _controller = DatePickerController();
   DateTime _selectedDate = DateTime.now();
+  int _selectedIndex = 1;
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+
+    if (index == 0) {
+      // ไปหน้าฐานข้อมูลยา
+      Get.to(() => Categories()); // ตรวจสอบว่า Categories import มาจากไหน
+    } else if (index == 1) {
+      // หน้า HomePage (ไม่ต้องเปลี่ยนอะไร)
+      Get.to(() => HomePage()); // หากต้องการเปลี่ยนกลับไปหน้า HomePage
+    } else if (index == 2) {
+      // ไปหน้าข้อมูลผู้ใช้
+      // Get.to(() => UserProfileScreen()); // ตรวจสอบว่า UserProfileScreen import ถูกต้องหรือไม่
+    }
+  }
 
   @override
   void initState() {
@@ -41,6 +59,39 @@ class _Homepage extends State<HomePage> {
           _datePickerTimeline(),
         ],
       ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _selectedIndex,
+        onTap: _onItemTapped,
+        selectedItemColor: Colors.white, // สีไอคอนที่เลือก
+        unselectedItemColor: Colors.grey[300], // สีไอคอนที่ไม่ได้เลือก
+        backgroundColor:
+            const Color.fromARGB(255, 73, 91, 227), // พื้นหลังสีน้ำเงิน
+        showSelectedLabels: false, // ไม่แสดง Label สำหรับปุ่มที่เลือก
+        showUnselectedLabels: false, // ไม่แสดง Label สำหรับปุ่มที่ไม่ได้เลือก
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(
+              Icons.medical_services,
+              size: 35,
+            ),
+            label: "",
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(
+              Icons.home,
+              size: 35,
+            ),
+            label: "",
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(
+              Icons.person,
+              size: 35,
+            ),
+            label: "",
+          ),
+        ],
+      ),
     );
   }
 
@@ -62,7 +113,7 @@ class _Homepage extends State<HomePage> {
             ),
           ],
         ),
-        MyButton(label: "เพิ่มรายการ", onTap: () =>Get.to(AddDrug()))
+        MyButton(label: "เพิ่มรายการ", onTap: () => Get.to(AddDrug()))
       ]),
     );
   }

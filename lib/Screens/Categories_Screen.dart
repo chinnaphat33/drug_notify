@@ -1,8 +1,9 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:sqflite/sqflite.dart';
-
+import 'package:pill_reminder/Screens/home_Screen.dart';
 import '../Data_Standard/Data_Standard_All.dart';
 import '../Database/Database_Helper.dart';
 import '../Database/Insert_Data.dart';
@@ -15,6 +16,23 @@ class Categories extends StatefulWidget {
 }
 
 class _Categories extends State<Categories> {
+  int _selectedIndex = 0;
+   void _onItemTapped(int index) {
+  setState(() {
+    _selectedIndex = index;
+  });
+
+  if (index == 0) {
+    // ไปหน้าฐานข้อมูลยา
+    Get.to(() => Categories()); // ตรวจสอบว่า Categories import มาจากไหน
+  } else if (index == 1) {
+    // หน้า HomePage (ไม่ต้องเปลี่ยนอะไร)
+    Get.to(() => HomePage()); // หากต้องการเปลี่ยนกลับไปหน้า HomePage
+  } else if (index == 2) {
+    // ไปหน้าข้อมูลผู้ใช้
+    // Get.to(() => UserProfileScreen()); // ตรวจสอบว่า UserProfileScreen import ถูกต้องหรือไม่
+  }
+}
   @override
   void initState() {
     super.initState();
@@ -47,24 +65,24 @@ class _Categories extends State<Categories> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-  title: const Text('Database Example'),
-  actions: [
-    IconButton(
-      icon: const Icon(Icons.delete),
-      onPressed: () async {
-  Database db = await DatabaseHelper.instance.database;
-  await DatabaseHelper.instance.dropAndRecreateUserTable(db); 
-  setState(() {
-    // รีเฟรชหน้าจอหลังจากลบตาราง
-  });
-  ScaffoldMessenger.of(context).showSnackBar(
-    const SnackBar(content: Text('Table d_user has been reset')),
-  );
-},
-
-    ),
-  ],
-),
+        automaticallyImplyLeading: false,
+        title: const Text('Database Example'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.delete),
+            onPressed: () async {
+              Database db = await DatabaseHelper.instance.database;
+              await DatabaseHelper.instance.dropAndRecreateUserTable(db);
+              setState(() {
+                // รีเฟรชหน้าจอหลังจากลบตาราง
+              });
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Table d_user has been reset')),
+              );
+            },
+          ),
+        ],
+      ),
       body: Column(
         children: [
           SizedBox(
@@ -97,7 +115,7 @@ class _Categories extends State<Categories> {
               ),
             ),
           ),
-           Expanded(
+          Expanded(
             child: SingleChildScrollView(
               child: Column(
                 children: [
@@ -151,40 +169,66 @@ class _Categories extends State<Categories> {
         onPressed: _insertData,
         child: const Icon(Icons.add),
       ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _selectedIndex,
+        selectedItemColor: Colors.white,
+        unselectedItemColor: Colors.grey[300],
+        backgroundColor: const Color.fromARGB(255, 73, 91, 227),
+        showSelectedLabels: false,
+        showUnselectedLabels: false,
+        onTap: (index) {
+          _onItemTapped(index); // เรียกฟังก์ชันในคลาสเดียวกัน
+        },
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.medical_services, size: 35),
+            label: "",
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home, size: 35),
+            label: "",
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person, size: 35),
+            label: "",
+          ),
+        ],
+      ),
     );
   }
 }
+
 void _showUserDetail(BuildContext context, Map<String, dynamic> userData) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return Dialog(
-          child: SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: userData.entries.map<Widget>((entry) {
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8.0),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '${entry.key}: ',
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        Expanded(
-                          child: Text(entry.value?.toString() ?? '-'),
-                        ),
-                      ],
-                    ),
-                  );
-                }).toList(),
-              ),
+  showDialog(
+    context: context,
+    builder: (context) {
+      return Dialog(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: userData.entries.map<Widget>((entry) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${entry.key}: ',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      Expanded(
+                        child: Text(entry.value?.toString() ?? '-'),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
             ),
           ),
-        );
-      },
-    );
-  }
+        ),
+      );
+    },
+  );
+}

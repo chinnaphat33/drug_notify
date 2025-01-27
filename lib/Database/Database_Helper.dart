@@ -205,6 +205,12 @@ Future<Map<String, dynamic>?> getUserByEmailOrPhone(String identifier) async {
     }
   }
 
+Future<List<String>> fetchMedicationNames() async {
+  final db = await DatabaseHelper.instance.database; // เชื่อมต่อฐานข้อมูล
+  final results = await db.rawQuery('SELECT name_th FROM medications'); // ดึงเฉพาะ name_th
+  return results.map((row) => row['name_th'] as String).toList(); // แปลงผลลัพธ์เป็น List<String>
+}
+
   deleteDatabase_tabel() async {
     String path = await getDatabasesPath();
     await deleteDatabase('$path/d_categories.db');
