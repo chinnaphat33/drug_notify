@@ -1,19 +1,27 @@
 // validators.dart
 import 'package:flutter/material.dart';
 
+RegExp emailvalid = RegExp(
+  r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$",
+);
+String? validateEmail(String emailreg) {
+  String _email = emailreg.trim();
+  if (emailreg.isEmpty) {
+    return 'โปรดกรอกอีเมล';
+  } else if (!emailvalid.hasMatch(emailreg)) {
+    return 'รูปแบบอีเมลของท่านไม่ถูกต้อง';
+  }
+  return null;
+}
 
 String? validateEmailOrPhone(String input) {
-  
   String value = input.trim();
 
-  
   if (value.isEmpty) {
     return 'โปรดกรอกข้อมูล';
   }
 
-  
   if (value.contains('@')) {
-    
     final RegExp emailRegExp = RegExp(
       r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$",
     );
@@ -21,7 +29,6 @@ String? validateEmailOrPhone(String input) {
       return 'รูปแบบอีเมลของท่านไม่ถูกต้อง';
     }
   } else {
-    
     final RegExp phoneRegExp = RegExp(r'^\d{10,15}$');
     if (!phoneRegExp.hasMatch(value)) {
       return 'รูปแบบเบอร์โทรของท่านไม่ถูกต้อง';
