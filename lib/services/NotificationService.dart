@@ -7,28 +7,29 @@ class NotificationService {
       FlutterLocalNotificationsPlugin();
 
   static Future<void> init() async {
-    // ตั้งค่า iOS
-    const DarwinInitializationSettings initializationSettingsIOS =
-        DarwinInitializationSettings();
+    tz.initializeTimeZones(); 
 
-    // ตั้งค่า Android
     const AndroidInitializationSettings initializationSettingsAndroid =
         AndroidInitializationSettings('@mipmap/ic_launcher');
 
+    const DarwinInitializationSettings initializationSettingsIOS =
+        DarwinInitializationSettings();
+
     final InitializationSettings initializationSettings =
         InitializationSettings(
-      iOS: initializationSettingsIOS,
       android: initializationSettingsAndroid,
+      iOS: initializationSettingsIOS,
     );
 
     await _notificationsPlugin.initialize(initializationSettings);
-    tz.initializeTimeZones();
   }
 
   static Future<void> scheduleNotification(
       int hour, int minute, String drugName) async {
+    final now = tz.TZDateTime.now(tz.local); 
+
     await _notificationsPlugin.zonedSchedule(
-      0, // ID ของการแจ้งเตือน
+      0,
       "Time to take your medication",
       "Take your $drugName now",
       _nextInstanceOfTime(hour, minute),
@@ -45,8 +46,7 @@ class NotificationService {
       uiLocalNotificationDateInterpretation:
           UILocalNotificationDateInterpretation.absoluteTime,
       matchDateTimeComponents: DateTimeComponents.time,
-      androidScheduleMode:
-          AndroidScheduleMode.exactAllowWhileIdle, // ✅ ใช้เวอร์ชันใหม่ของ Android
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
     );
   }
 

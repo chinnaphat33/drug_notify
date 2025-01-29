@@ -3,9 +3,11 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:date_picker_timeline/date_picker_timeline.dart';
-import 'package:pill_reminder/Screens/add_drug.dart';
+import 'package:pill_reminder/Screens/Add_drag_Screen.dart/Q_Screen/Select_name_medication.dart.dart';
 import 'package:pill_reminder/Screens/widget/button.dart';
 import 'package:pill_reminder/Screens/Categories_Screen.dart';
+
+import 'Add_drag_Screen.dart/Q_drug_model/model.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -113,7 +115,21 @@ class _Homepage extends State<HomePage> {
             ),
           ],
         ),
-        MyButton(label: "เพิ่มรายการ", onTap: () => Get.to(AddDrug()))
+        ElevatedButton(
+          onPressed: () {
+            Drug newDrug = Drug();
+            Get.to(() => QuestionNameScreen(drug: newDrug));
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.blue, 
+            foregroundColor: Colors.white, 
+            padding: EdgeInsets.symmetric(
+                vertical: 12, horizontal: 24), 
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(15)), 
+          ),
+          child: Text("เพิ่มรายการยา"),
+        )
       ]),
     );
   }
