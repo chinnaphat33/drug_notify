@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../Q_drug_model/model.dart';
 import 'package:pill_reminder/Database/Database_Helper.dart';
-import 'package:pill_reminder/Screens/Add_drag_Screen.dart/Q_Screen/Q_Form.dart';
+import 'package:pill_reminder/Screens/Add_drag_Screen.dart/Q_Screen/Select_dose_frequency.dart';
 
 class QuestionNameScreen extends StatefulWidget {
   final Drug drug;
@@ -108,7 +108,7 @@ class _QuestionNameScreenState extends State<QuestionNameScreen> {
                             context,
                             MaterialPageRoute(
                               builder: (context) =>
-                                  QuestionFormScreen(drug: widget.drug),
+                                  SelectDoseFrequency(drug: widget.drug),
                             ),
                           );
                         }

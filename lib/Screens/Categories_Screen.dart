@@ -17,22 +17,23 @@ class Categories extends StatefulWidget {
 
 class _Categories extends State<Categories> {
   int _selectedIndex = 0;
-   void _onItemTapped(int index) {
-  setState(() {
-    _selectedIndex = index;
-  });
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
 
-  if (index == 0) {
-    // ไปหน้าฐานข้อมูลยา
-    Get.to(() => Categories()); // ตรวจสอบว่า Categories import มาจากไหน
-  } else if (index == 1) {
-    // หน้า HomePage (ไม่ต้องเปลี่ยนอะไร)
-    Get.to(() => HomePage()); // หากต้องการเปลี่ยนกลับไปหน้า HomePage
-  } else if (index == 2) {
-    // ไปหน้าข้อมูลผู้ใช้
-    // Get.to(() => UserProfileScreen()); // ตรวจสอบว่า UserProfileScreen import ถูกต้องหรือไม่
+    if (index == 0) {
+      // ไปหน้าฐานข้อมูลยา
+      Get.to(() => Categories()); // ตรวจสอบว่า Categories import มาจากไหน
+    } else if (index == 1) {
+      // หน้า HomePage (ไม่ต้องเปลี่ยนอะไร)
+      Get.to(() => HomePage()); // หากต้องการเปลี่ยนกลับไปหน้า HomePage
+    } else if (index == 2) {
+      // ไปหน้าข้อมูลผู้ใช้
+      // Get.to(() => UserProfileScreen()); // ตรวจสอบว่า UserProfileScreen import ถูกต้องหรือไม่
+    }
   }
-}
+
   @override
   void initState() {
     super.initState();
@@ -124,26 +125,17 @@ class _Categories extends State<Categories> {
                         .getDataStream('${pang_s[pang_id]}'),
                     builder: (context, snapshot) {
                       if (snapshot.hasData) {
+                        List<Map<String, dynamic>> data = snapshot.data!;
+
                         return DataTable(
-                          columns: [
-                            DataColumn(label: Text('ID')),
-                            DataColumn(label: Text('Name TH')),
-                            DataColumn(label: Text('Action')),
-                          ],
-                          rows: snapshot.data!.map<DataRow>((item) {
+                          columns: _buildColumnsForTable(
+                              pang_s[pang_id]), // ✅ ใช้ฟังก์ชันกำหนดคอลัมน์
+                          rows: data.map<DataRow>((item) {
                             return DataRow(
-                              cells: [
-                                DataCell(Text(item['id']?.toString() ?? '-')),
-                                DataCell(Text(item['name_th'] ?? '-')),
-                                DataCell(
-                                  IconButton(
-                                    icon: Icon(Icons.edit),
-                                    onPressed: () {
-                                      _showUserDetail(context, item);
-                                    },
-                                  ),
-                                ),
-                              ],
+                              cells: _buildCellsForTable(
+                                  context,
+                                  pang_s[pang_id],
+                                  item), // ✅ ส่ง context เข้าไป
                             );
                           }).toList(),
                         );
@@ -195,6 +187,101 @@ class _Categories extends State<Categories> {
         ],
       ),
     );
+  }
+}
+
+List<DataColumn> _buildColumnsForTable(String tableName) {
+  switch (tableName) {
+    case 'd_categories':
+      return const [
+        DataColumn(label: Text('ID')),
+        DataColumn(label: Text('Name TH')),
+        DataColumn(label: Text('Name EN')),
+      ];
+    case 'd_medications':
+      return const [
+        DataColumn(label: SizedBox(width: 40, child: Text('ID'))),
+        DataColumn(label: SizedBox(width: 120, child: Text('Name TH'))),
+        DataColumn(label: SizedBox(width: 120, child: Text('Name EN'))),
+      ];
+    case 'd_unit':
+      return const [
+        DataColumn(label: Text('ID')),
+        DataColumn(label: Text('Unit TH')),
+        DataColumn(label: Text('Unit EN')),
+      ];
+    case 'd_user':
+      return const [
+        DataColumn(label: Text('ID')),
+        DataColumn(label: Text('Name TH')),
+        DataColumn(label: Text('Action')),
+      ];
+    case 'medication_schedule':
+      return const [
+        DataColumn(label: Text('ID')),
+        DataColumn(label: Text('Date')),
+        DataColumn(label: Text('Status')),
+      ];
+    default:
+      return const [
+        DataColumn(label: Text('ID')),
+        DataColumn(label: Text('Data')),
+      ];
+  }
+}
+
+List<DataCell> _buildCellsForTable(
+    BuildContext context, String tableName, Map<String, dynamic> item) {
+  switch (tableName) {
+    case 'd_categories':
+      return [
+        DataCell(Text(item['id']?.toString() ?? '-')),
+        DataCell(Text(item['name_th'] ?? '-')),
+        DataCell(Text(item['name_en'] ?? '-')),
+      ];
+    case 'd_medications':
+      return [
+        DataCell(
+            SizedBox(width: 40, child: Text(item['id']?.toString() ?? '-'))),
+        DataCell(SizedBox(
+          width: 120, // ปรับความกว้าง
+          child: Text(item['name_th'] ?? '-', overflow: TextOverflow.ellipsis),
+        )),
+        DataCell(SizedBox(
+          width: 120, // ปรับความกว้าง
+          child: Text(item['name_en'] ?? '-', overflow: TextOverflow.ellipsis),
+        )),
+      ];
+    case 'd_unit':
+      return [
+        DataCell(Text(item['id']?.toString() ?? '-')),
+        DataCell(Text(item['unit_th'] ?? '-')),
+        DataCell(Text(item['unit_en'] ?? '-')),
+      ];
+    case 'd_user':
+      return [
+        DataCell(Text(item['id']?.toString() ?? '-')),
+        DataCell(Text(item['name_th'] ?? '-')),
+        DataCell(
+          IconButton(
+            icon: const Icon(Icons.edit),
+            onPressed: () {
+              _showUserDetail(context, item); // ✅ ใช้ context ที่ส่งมา
+            },
+          ),
+        ),
+      ];
+    case 'medication_schedule':
+      return [
+        DataCell(Text(item['id']?.toString() ?? '-')),
+        DataCell(Text(item['date'] ?? '-')),
+        DataCell(Text(item['status'] ?? '-')),
+      ];
+    default:
+      return [
+        DataCell(Text(item['id']?.toString() ?? '-')),
+        DataCell(Text(item.toString())),
+      ];
   }
 }
 

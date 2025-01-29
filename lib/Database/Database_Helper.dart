@@ -29,7 +29,7 @@ Future _onCreate(Database db, int version) async {
   await _createMedicationScheduleTable(db);
 
   // เพิ่มคอลัมน์ age หลังจากสร้างตาราง d_user
-  await db.execute('ALTER TABLE d_user ADD COLUMN age TEXT');
+   await addAgeColumnIfNotExists(db); //
 }
 
 
@@ -247,4 +247,15 @@ Future _onUpgrade(Database db, int oldVersion, int newVersion) async {
     await dropAndRecreateUserTable(db);
   }
 }
+Future<void> addAgeColumnIfNotExists(Database db) async {
+  var result = await db
+      .rawQuery("PRAGMA table_info(d_user)"); // ดึงข้อมูลโครงสร้างตาราง
+
+  bool columnExists = result.any((column) => column['name'] == 'age');
+
+  if (!columnExists) {
+    await db.execute('ALTER TABLE d_user ADD COLUMN age TEXT');
+  }
+}
+
 }
