@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:pill_reminder/Screens/Add_drag_Screen.dart/Q_Screen/Q_Name.dart';
+
 import 'package:pill_reminder/Screens/Categories_Screen.dart';
 import 'package:pill_reminder/Screens/home_Screen.dart';
 import 'package:pill_reminder/Screens/login_Screen.dart';
@@ -42,7 +42,7 @@ class MyApp extends StatelessWidget {
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
       ],
-      home: QuestionNameScreen(drug: Drug()),
+      home: HomePage(),
       routes: {
         'register': (context) => Register(),
         'home': (context) => HomePage(),
