@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../Q_drug_model/model.dart';
-import 'package:pill_reminder/Screens/Add_drag_Screen.dart/Q_Screen/ScheduleNotification.dart'; 
+import 'package:pill_reminder/Screens/Add_drag_Screen.dart/Q_Screen/ScheduleNotification.dart';
 
 class SelectDailyDose extends StatefulWidget {
   final Drug drug;
@@ -58,7 +58,6 @@ class _SelectDailyDoseState extends State<SelectDailyDose> {
                       widget.drug.dosagePerDay =
                           _mapDoseToNumber(selectedDose!);
 
-                      debugPrint('Drug name (for debug): ${widget.drug.name}');
                       debugPrint(
                           'Drug Daily Dose (for debug): ${widget.drug.dosagePerDay}');
 
