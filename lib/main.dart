@@ -7,6 +7,7 @@ import 'package:pill_reminder/Screens/home_Screen.dart';
 import 'package:pill_reminder/Screens/login_Screen.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
+import 'package:pill_reminder/Controllers/ medication_controller.dart';
 import 'package:pill_reminder/Screens/register_Screen.dart';
 import 'package:pill_reminder/services/NotificationService.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -25,7 +26,7 @@ class MyHttpOverrides extends HttpOverrides {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
+  Get.put(MedicationController());
   // โหลด timezone database
   tz.initializeTimeZones();
 
@@ -73,7 +74,7 @@ class MyApp extends StatelessWidget {
           GlobalMaterialLocalizations.delegate,
           GlobalWidgetsLocalizations.delegate,
         ],
-        home: HomePage(),
+        home: login(),
         routes: {
           'register': (context) => Register(),
           'home': (context) => HomePage(),

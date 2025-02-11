@@ -6,3 +6,4 @@ class Drug {
   String? frequencydose;
   Drug({this.name, this.form,this.frequencydose, this.dosagePerDay, this.times});
 }
+

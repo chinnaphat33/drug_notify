@@ -3,6 +3,8 @@ import 'package:get/get.dart';
 import 'package:pill_reminder/services/NotificationService.dart';
 import '../Q_drug_model/model.dart';
 import 'package:pill_reminder/Screens/home_Screen.dart';
+import 'package:pill_reminder/Controllers/ medication_controller.dart';
+
 class ScheduleNotification extends StatefulWidget {
   final Drug drug;
 
@@ -14,7 +16,8 @@ class ScheduleNotification extends StatefulWidget {
 
 class _ScheduleNotificationState extends State<ScheduleNotification> {
   TimeOfDay selectedTime = TimeOfDay.now();
-  List<String> selectedTimes = []; // ✅ เพิ่มตัวแปรเก็บเวลาหลายช่วง
+  List<String> selectedTimes = []; //
+final MedicationController medicationController = Get.find<MedicationController>();
 
   @override
   Widget build(BuildContext context) {
@@ -58,12 +61,23 @@ class _ScheduleNotificationState extends State<ScheduleNotification> {
                   TimeOfDay? pickedTime = await showTimePicker(
                     context: context,
                     initialTime: selectedTime,
+                    helpText: "Select Time", // เปลี่ยนข้อความ Title ของ Dialog
+                    initialEntryMode:
+                        TimePickerEntryMode.input, // เริ่มต้นที่ Numeric Input
+                    builder: (BuildContext context, Widget? child) {
+                      return MediaQuery(
+                        data: MediaQuery.of(context)
+                            .copyWith(alwaysUse24HourFormat: true),
+                        child: child!,
+                      );
+                    },
                   );
+
                   if (pickedTime != null) {
                     setState(() {
                       selectedTime = pickedTime;
                       String formattedTime =
-                          "${selectedTime.hour}:${selectedTime.minute}";
+                          "${selectedTime.hour.toString().padLeft(2, '0')}:${selectedTime.minute.toString().padLeft(2, '0')}";
                       if (!selectedTimes.contains(formattedTime)) {
                         selectedTimes.add(formattedTime);
                       }
@@ -81,9 +95,11 @@ class _ScheduleNotificationState extends State<ScheduleNotification> {
               child: ElevatedButton(
                 onPressed: () {
                   if (selectedTimes.isNotEmpty) {
-                    widget.drug.times =
-                        selectedTimes; // 
+                    widget.drug.times = selectedTimes; //
+                    medicationController.addMedication(widget.drug);
 
+                    // บันทึกลง SharedPreferences เพื่อให้ข้อมูลคงอยู่แม้ปิดแอป
+                    medicationController.saveMedications();
                     // ตั้งค่าแจ้งเตือนสำหรับทุกช่วงเวลา
                     for (String time in selectedTimes) {
                       List<String> splitTime = time.split(":");
@@ -99,7 +115,11 @@ class _ScheduleNotificationState extends State<ScheduleNotification> {
                     debugPrint(
                         'Drug Frequency (for debug): ${widget.drug.times}');
                     // กลับไปหน้าก่อนหน้า พร้อมส่งค่า drug กลับไป
-                    Get.to(HomePage());
+
+                    Get.off(
+                      () => HomePage(),
+                      arguments: widget.drug,
+                    );
                   } else {
                     // แสดงแจ้งเตือนให้ผู้ใช้เลือกเวลาขั้นต่ำ 1 ช่วง
                     Get.snackbar(

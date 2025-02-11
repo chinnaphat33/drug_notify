@@ -203,9 +203,7 @@ class _Register extends State<Register> {
                   ),
                   Row(
                     children: [
-                      const SizedBox(
-                        width: 5,
-                      ),
+                    
                       SizedBox(
                         width: 170,
                         child: TextFormField(
@@ -238,7 +236,7 @@ class _Register extends State<Register> {
                         width: 10,
                       ),
                       SizedBox(
-                        width: 170,
+                        width: 160,
                         child: TextFormField(
                           obscureText: false,
                           decoration: InputDecoration(
@@ -271,9 +269,7 @@ class _Register extends State<Register> {
                   ),
                   Row(
                     children: [
-                      const SizedBox(
-                        width: 5,
-                      ),
+                      
                       SizedBox(
                         width: 170,
                         child: TextFormField(
@@ -344,7 +340,7 @@ class _Register extends State<Register> {
                         width: 10,
                       ),
                       SizedBox(
-                        width: 170,
+                        width: 160,
                         child: TextFormField(
                           readOnly: true, // ป้องกันการพิมพ์ในช่อง
                           decoration: InputDecoration(
@@ -417,9 +413,7 @@ class _Register extends State<Register> {
 
                   Row(
                     children: [
-                      const SizedBox(
-                        width: 5,
-                      ),
+                      
                       SizedBox(
                         width: 170,
                         child: TextFormField(
@@ -452,7 +446,7 @@ class _Register extends State<Register> {
                         width: 10,
                       ),
                       SizedBox(
-                        width: 170,
+                        width: 160,
                         child: TextFormField(
                           obscureText: false,
                           decoration: InputDecoration(
