@@ -8,19 +8,27 @@ class MedicationController extends GetxController {
 
   void addMedication(Drug drug) {
     medications.add(drug);
-    saveMedications(); 
+    saveMedications();
   }
 
   Future<void> saveMedications() async {
     final prefs = await SharedPreferences.getInstance();
-  
-    List<Map<String, dynamic>> medicationList = medications.map((drug) => {
-      "name": drug.name,
-      "times": drug.times,
-    }).toList();
 
-    String jsonMedications = jsonEncode(medicationList);
-    await prefs.setString('medications', jsonMedications);
+    List<Map<String, dynamic>> jsonMedications = medications
+        .map((drug) => {
+              'name': drug.name,
+              'times': drug.times,
+              'selectedDays':
+                  drug.selectedDays, 
+              'intervalDays':
+                  drug.intervalDays, 
+            })
+        .toList();
+
+    String encoded = jsonEncode(jsonMedications);
+    await prefs.setString('medications', encoded);
+
+    print("💾 Saved Medications: $encoded"); 
   }
 
   Future<void> loadMedications() async {
@@ -28,12 +36,26 @@ class MedicationController extends GetxController {
     String? jsonMedications = prefs.getString('medications');
 
     if (jsonMedications != null) {
+      print("📥 Loaded JSON: $jsonMedications"); // ✅ ตรวจสอบ JSON ที่โหลดมา
+
       List<dynamic> decodedList = jsonDecode(jsonMedications);
-      medications.value = decodedList.map((item) => Drug(
-        name: item['name'],
-        times: List<String>.from(item['times']),
-      )).toList();
+      medications.value = decodedList.map((item) {
+        Drug drug = Drug(
+          name: item['name'],
+          times: List<String>.from(item['times']),
+          selectedDays: item['selectedDays'] != null
+              ? List<int>.from(item['selectedDays'])
+              : [],
+          intervalDays: item['intervalDays'],
+        );
+
+        print(
+            "🔍 Loaded Drug: ${drug.name}, Days: ${drug.selectedDays}, Interval: ${drug.intervalDays}"); // ✅ Log ค่าแต่ละตัว
+
+        return drug;
+      }).toList();
+    } else {
+      print("⚠️ No Medications Found in SharedPreferences");
     }
   }
 }
-

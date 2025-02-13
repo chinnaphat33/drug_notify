@@ -17,7 +17,8 @@ class ScheduleNotification extends StatefulWidget {
 class _ScheduleNotificationState extends State<ScheduleNotification> {
   TimeOfDay selectedTime = TimeOfDay.now();
   List<String> selectedTimes = []; //
-final MedicationController medicationController = Get.find<MedicationController>();
+  final MedicationController medicationController =
+      Get.find<MedicationController>();
 
   @override
   Widget build(BuildContext context) {
@@ -95,33 +96,45 @@ final MedicationController medicationController = Get.find<MedicationController>
               child: ElevatedButton(
                 onPressed: () {
                   if (selectedTimes.isNotEmpty) {
-                    widget.drug.times = selectedTimes; //
+                    widget.drug.times = selectedTimes;
                     medicationController.addMedication(widget.drug);
+                    medicationController.saveMedications(); // บันทึกข้อมูล
 
-                    // บันทึกลง SharedPreferences เพื่อให้ข้อมูลคงอยู่แม้ปิดแอป
-                    medicationController.saveMedications();
-                    // ตั้งค่าแจ้งเตือนสำหรับทุกช่วงเวลา
                     for (String time in selectedTimes) {
                       List<String> splitTime = time.split(":");
                       int hour = int.parse(splitTime[0]);
                       int minute = int.parse(splitTime[1]);
 
-                      NotificationService.scheduleNotification(
-                        hour,
-                        minute,
-                        widget.drug.name ?? "your medicine",
-                      );
+                      // 🔥 **เรียกใช้ฟังก์ชันแจ้งเตือนตามประเภทความถี่ที่เลือก**
+                      if (widget.drug.frequencydose == "Every day") {
+                        NotificationService.scheduleDailyNotification(
+                            hour, minute, widget.drug.name ?? "your medicine");
+                      } else if (widget.drug.frequencydose ==
+                              "Specific days of the week" &&
+                          widget.drug.selectedDays != null) {
+                        NotificationService.scheduleWeeklyNotification(
+                            hour,
+                            minute,
+                            widget.drug.selectedDays!,
+                            widget.drug.name ?? "your medicine");
+                      } else if (widget.drug.frequencydose == "Every X days" &&
+                          widget.drug.intervalDays != null) {
+                        NotificationService.scheduleEveryXDaysNotification(
+                            hour,
+                            minute,
+                            widget.drug.intervalDays!,
+                            widget.drug.name ?? "your medicine");
+                      } else {
+                        // ถ้าไม่มีเงื่อนไขพิเศษ ให้แจ้งเตือนครั้งเดียว
+                        NotificationService.scheduleNotification(
+                            hour, minute, widget.drug.name ?? "your medicine");
+                      }
                     }
+
                     debugPrint(
                         'Drug Frequency (for debug): ${widget.drug.times}');
-                    // กลับไปหน้าก่อนหน้า พร้อมส่งค่า drug กลับไป
-
-                    Get.off(
-                      () => HomePage(),
-                      arguments: widget.drug,
-                    );
+                    Get.off(() => HomePage(), arguments: widget.drug);
                   } else {
-                    // แสดงแจ้งเตือนให้ผู้ใช้เลือกเวลาขั้นต่ำ 1 ช่วง
                     Get.snackbar(
                       "Error",
                       "Please select at least one time!",

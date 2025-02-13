@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../Q_drug_model/model.dart';
 import 'package:pill_reminder/Screens/Add_drag_Screen.dart/Q_Screen/SelectDailyDose.dart';
+import 'package:pill_reminder/Screens/Add_drag_Screen.dart/Q_Screen/SelectFrequencyDetails.dart';
 
 class SelectDoseFrequency extends StatefulWidget {
   final Drug drug;
@@ -25,7 +26,7 @@ class _SelectDoseFrequencyState extends State<SelectDoseFrequency> {
   ];
 
   String? selectedFrequency;
-
+  List<int> frequencyMap = [1, 2, 3, 4, 5, 6, 7, -1];
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -43,37 +44,37 @@ class _SelectDoseFrequencyState extends State<SelectDoseFrequency> {
             Expanded(
               child: ListView.separated(
                 itemCount: doseOptions.length,
-                separatorBuilder: (context, index) => const Divider(
-                  thickness: 1, // ความหนาของเส้น
-                  color: Colors.grey, // สีของเส้น
-                ),
+                separatorBuilder: (context, index) =>
+                    const Divider(thickness: 1, color: Colors.grey),
                 itemBuilder: (context, index) {
                   return ListTile(
-                      title: Text(doseOptions[index]),
-                      trailing: selectedFrequency == doseOptions[index]
-                          ? const Icon(Icons.check, color: Colors.blue)
-                          : null,
-                      onTap: () {
-                        setState(() {
-                          selectedFrequency = doseOptions[index];
-                        });
-
-                        // อัปเดตค่าลงใน Drug object
-                        widget.drug.frequencydose =
-                            selectedFrequency; // ✨ เพิ่มการบันทึกค่า frequencydose
-
-                        debugPrint(
-                            'Drug Frequency (for debug): ${widget.drug.frequencydose}'); // ✨ แสดงผลค่า frequencydose
-                        if (selectedFrequency == "Every day") {
-                          Get.to(() => SelectDailyDose(drug: widget.drug));
-                        }
-
-                        // ส่งค่ากลับไปยังหน้าก่อนหน้า
-                        else {
-                          // ถ้าเป็น "Only as needed" → กลับหน้าหลัก
-                          Get.back(result: widget.drug);
-                        }
+                    title: Text(doseOptions[index]),
+                    trailing: selectedFrequency == doseOptions[index]
+                        ? const Icon(Icons.check, color: Colors.blue)
+                        : null,
+                    onTap: () {
+                      setState(() {
+                        selectedFrequency = doseOptions[index];
+                        widget.drug.frequencydose = selectedFrequency;
                       });
+
+                      debugPrint(
+                          'Drug Frequency (for debug): ${widget.drug.frequencydose}');
+
+                      if (selectedFrequency == "Every day") {
+                        Get.to(() => SelectDailyDose(drug: widget.drug));
+                      } else if (selectedFrequency ==
+                              "Specific days of the week" ||
+                          selectedFrequency == "Every X days" ||
+                          selectedFrequency == "Every X weeks") {
+                        Get.to(() => SelectFrequencyDetails(
+                            drug: widget.drug,
+                            frequencyType: selectedFrequency?? "Every day"));
+                      } else {
+                        Get.back(result: widget.drug);
+                      }
+                    },
+                  );
                 },
               ),
             ),

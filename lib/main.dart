@@ -74,7 +74,7 @@ class MyApp extends StatelessWidget {
           GlobalMaterialLocalizations.delegate,
           GlobalWidgetsLocalizations.delegate,
         ],
-        home: login(),
+        home: HomePage(),
         routes: {
           'register': (context) => Register(),
           'home': (context) => HomePage(),

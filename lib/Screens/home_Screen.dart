@@ -3,12 +3,11 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:date_picker_timeline/date_picker_timeline.dart';
-import 'package:pill_reminder/Screens/Add_drag_Screen.dart/Q_Screen/Select_name_medication.dart.dart';
-import 'package:pill_reminder/Screens/widget/button.dart';
-import 'package:pill_reminder/Screens/Categories_Screen.dart';
-import 'package:pill_reminder/Screens/Add_drag_Screen.dart/Q_Screen/ScheduleNotification.dart';
 import 'package:pill_reminder/Controllers/ medication_controller.dart';
+import 'package:pill_reminder/Screens/Add_drag_Screen.dart/Q_Screen/Select_name_medication.dart.dart';
+import 'package:pill_reminder/Screens/Categories_Screen.dart';
 import 'Add_drag_Screen.dart/Q_drug_model/model.dart';
+// import 'dart:developer';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -20,98 +19,72 @@ class HomePage extends StatefulWidget {
 class _Homepage extends State<HomePage> {
   final DatePickerController _controller = DatePickerController();
   DateTime _selectedDate = DateTime.now();
+  DateTime? _lastPrintedDate; // ✅ ตัวแปรเก็บค่าที่ print ไปแล้ว
   int _selectedIndex = 1;
+  List<Drug> _cachedFilteredMeds = [];
 
-  // ใช้ GetX Controller แทน List ทั่วไป
   final MedicationController medicationController =
       Get.put(MedicationController());
 
-  void _confirmDeleteDrug(int index) {
-    Get.defaultDialog(
-        title: "Confirm Deletion",
-        middleText: "Are you sure you want to delete this medication?",
-        textConfirm: "Delete",
-        textCancel: "Cancel",
-        confirmTextColor: Colors.white,
-        buttonColor: Colors.red,
-        onConfirm: () {
-          medicationController.medications.removeAt(index);
-          medicationController.saveMedications();
-
-          Get.back(); // ปิด Dialog หลังจากลบข้อมูล
-        },
-        onCancel: () => Get.off(() => HomePage()));
-  }
-
+  @override
   void initState() {
     super.initState();
-    final MedicationController medicationController =
-        Get.put(MedicationController());
-    medicationController.loadMedications();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_controller != null) {
-        _controller.animateToDate(DateTime.now());
-      }
+    _selectedDate = DateTime.now();
+    medicationController.loadMedications().then((_) {
+      _updateFilteredMedications();
+    });
 
-      // รับค่าจาก arguments ถ้ามี
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _controller.animateToDate(_selectedDate);
       final Drug? newDrug = Get.arguments;
-      if (newDrug != null) {
+      if (newDrug != null &&
+          !medicationController.medications.contains(newDrug)) {
         medicationController.addMedication(newDrug);
+        _updateFilteredMedications();
       }
     });
   }
 
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-
-    if (index == 0) {
-      Get.to(() => Categories());
-    } else if (index == 1) {
-      Get.to(() => HomePage());
+  void _onDateSelected(DateTime date) {
+    if (_selectedDate != date) {
+      setState(() {
+        _selectedDate = date;
+        _updateFilteredMedications();
+      });
     }
+  }
+
+  void _updateFilteredMedications() {
+    _cachedFilteredMeds = medicationController.medications
+        .where((drug) => _shouldShowMedication(drug))
+        .toList();
+
+    // ✅ Print แค่ครั้งเดียวเมื่อ _selectedDate เปลี่ยน
+    if (_lastPrintedDate == null || _lastPrintedDate != _selectedDate) {
+      print("📅 Selected Date Changed: $_selectedDate");
+      print("📋 Medications Count: ${_cachedFilteredMeds.length}");
+      _lastPrintedDate = _selectedDate;
+    }
+
+    setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        automaticallyImplyLeading: false,
-        backgroundColor: const Color.fromARGB(255, 73, 91, 227),
-      ),
+          automaticallyImplyLeading: false,
+          backgroundColor: const Color.fromARGB(255, 73, 91, 227)),
       body: Column(
         children: [
           _addTaskBar(),
           const SizedBox(height: 10),
           _datePickerTimeline(),
           const SizedBox(height: 10),
-          _medicationsList(), // เปลี่ยนมาใช้ GetX Observer
+          _medicationsList(),
         ],
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
-        selectedItemColor: Colors.white,
-        unselectedItemColor: Colors.grey[300],
-        backgroundColor: const Color.fromARGB(255, 73, 91, 227),
-        showSelectedLabels: false,
-        showUnselectedLabels: false,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.medical_services, size: 35),
-            label: "",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home, size: 35),
-            label: "",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person, size: 35),
-            label: "",
-          ),
-        ],
-      ),
+      bottomNavigationBar: _buildBottomNavBar(),
     );
   }
 
@@ -124,15 +97,11 @@ class _Homepage extends State<HomePage> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                DateFormat.yMMMMd().format(DateTime.now()),
-                style:
-                    GoogleFonts.lato(fontSize: 16, fontWeight: FontWeight.w600),
-              ),
-              const Text(
-                "Today",
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-              ),
+              Text(DateFormat.yMMMMd().format(DateTime.now()),
+                  style: GoogleFonts.lato(
+                      fontSize: 16, fontWeight: FontWeight.w600)),
+              const Text("Today",
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
             ],
           ),
           ElevatedButton(
@@ -140,9 +109,9 @@ class _Homepage extends State<HomePage> {
               Drug newDrug = Drug();
               final result =
                   await Get.to(() => QuestionNameScreen(drug: newDrug));
-
               if (result != null && result is Drug) {
                 medicationController.addMedication(result);
+                _updateFilteredMedications();
               }
             },
             style: ElevatedButton.styleFrom(
@@ -170,6 +139,7 @@ class _Homepage extends State<HomePage> {
         initialSelectedDate: DateTime.now(),
         selectionColor: Colors.blue,
         selectedTextColor: Colors.white,
+        onDateChange: _onDateSelected,
         dateTextStyle: GoogleFonts.lato(
           textStyle: const TextStyle(
               fontSize: 20, fontWeight: FontWeight.w600, color: Colors.grey),
@@ -182,58 +152,85 @@ class _Homepage extends State<HomePage> {
           textStyle: const TextStyle(
               fontSize: 14, fontWeight: FontWeight.w600, color: Colors.grey),
         ),
-        onDateChange: (date) {
-          setState(() {
-            _selectedDate = date;
-          });
-        },
       ),
     );
   }
 
   Widget _medicationsList() {
     return Expanded(
-        child: Obx(
-      () => medicationController.medications.isEmpty
-          ? Center(child: Text("No medications added."))
-          : ListView.builder(
-              itemCount: medicationController.medications.length,
-              itemBuilder: (context, index) {
-                final drug = medicationController.medications[index];
+      child: _cachedFilteredMeds.isEmpty
+          ? Center(child: Text("No medications for this day."))
+          : _buildMedicationsList(),
+    );
+  }
 
-                return Card(
-                  elevation: 3,
-                  margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                  child: ListTile(
-                    title: Text(
-                      drug.name ?? "No Name",
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    subtitle: Text(
-                      "Times: ${drug.times != null && drug.times!.isNotEmpty ? drug.times!.join(", ") : "No schedule set"}",
-                    ),
-                    trailing: IconButton(
-                      icon: Icon(Icons.delete, color: Colors.red),
-                      onPressed: () {
-                        _confirmDeleteDrug(index);
-                      },
-                    ),
-                    onTap: () async {
-                      // เมื่อกดเข้าไปให้ไปที่หน้าแก้ไขยา
-                      Drug? updatedDrug =
-                          await Get.to(() => ScheduleNotification(drug: drug));
+  Widget _buildMedicationsList() {
+    return ListView.builder(
+      itemCount: _cachedFilteredMeds.length,
+      itemBuilder: (context, index) {
+        final drug = _cachedFilteredMeds[index];
 
-                      // อัปเดตค่าหากมีการเปลี่ยนแปลง
-                      if (updatedDrug != null) {
-                        setState(() {
-                          medicationController.medications[index] = updatedDrug;
-                        });
-                      }
-                    },
-                  ),
-                );
-              },
-            ),
-    ));
+        return Card(
+          elevation: 3,
+          margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+          child: ListTile(
+            title: Text(drug.name ?? "No Name",
+                style: TextStyle(fontWeight: FontWeight.bold)),
+            subtitle:
+                Text("Times: ${drug.times?.join(", ") ?? "No schedule set"}"),
+            trailing: IconButton(
+                icon: Icon(Icons.delete, color: Colors.red),
+                onPressed: () {
+                  setState(() {
+                    // ✅ ใช้ setState เพื่อบังคับให้ UI รีเฟรช
+                    medicationController.medications.removeAt(index);
+                    medicationController.saveMedications();
+                    _updateFilteredMedications();
+                  });
+                }),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildBottomNavBar() {
+    return BottomNavigationBar(
+      currentIndex: _selectedIndex,
+      onTap: (index) {
+        setState(() {
+          _selectedIndex = index;
+        });
+        if (index == 0) Get.to(() => Categories());
+        if (index == 1) Get.to(() => HomePage());
+      },
+      selectedItemColor: Colors.white,
+      unselectedItemColor: Colors.grey[300],
+      backgroundColor: const Color.fromARGB(255, 73, 91, 227),
+      showSelectedLabels: false,
+      showUnselectedLabels: false,
+      items: const [
+        BottomNavigationBarItem(
+            icon: Icon(Icons.medical_services, size: 35), label: ""),
+        BottomNavigationBarItem(icon: Icon(Icons.home, size: 35), label: ""),
+        BottomNavigationBarItem(icon: Icon(Icons.person, size: 35), label: ""),
+      ],
+    );
+  }
+
+  bool _shouldShowMedication(Drug drug) {
+    DateTime today = _selectedDate;
+    int weekdayFlutter = today.weekday;
+
+    if (drug.frequencydose == "Every day") return true;
+    if (drug.selectedDays != null &&
+        drug.selectedDays!.contains(weekdayFlutter)) return true;
+
+    if (drug.intervalDays != null && drug.startDate != null) {
+      int daysSinceStart = today.difference(drug.startDate!).inDays;
+      return daysSinceStart % drug.intervalDays! == 0;
+    }
+
+    return false;
   }
 }
