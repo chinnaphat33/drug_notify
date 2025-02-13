@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 import '../Screens/Add_drag_Screen.dart/Q_drug_model/model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
+import 'package:flutter/material.dart';
 
 class MedicationController extends GetxController {
   var medications = <Drug>[].obs;
@@ -57,5 +58,21 @@ class MedicationController extends GetxController {
     } else {
       print("⚠️ No Medications Found in SharedPreferences");
     }
+  }
+void confirmDeleteDrug(int index) {
+    Get.defaultDialog(
+      title: "Confirm Deletion",
+      middleText: "Are you sure you want to delete this medication?",
+      textConfirm: "Delete",
+      textCancel: "Cancel",
+      confirmTextColor: Colors.white,
+      buttonColor: Colors.red,
+      onConfirm: () {
+        medications.removeAt(index);  
+        saveMedications();  
+        
+        Get.back(); 
+      },
+    );
   }
 }

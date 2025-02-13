@@ -183,8 +183,7 @@ class _Homepage extends State<HomePage> {
                 onPressed: () {
                   setState(() {
                     // ✅ ใช้ setState เพื่อบังคับให้ UI รีเฟรช
-                    medicationController.medications.removeAt(index);
-                    medicationController.saveMedications();
+                     medicationController.confirmDeleteDrug(index);
                     _updateFilteredMedications();
                   });
                 }),
